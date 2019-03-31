@@ -65,7 +65,7 @@ class _HomeState extends State<Home> {
                 ),
               ),
             ),
-            _returnRouteButton(Icons.live_help, 'Request for Help', '/help'),
+            _returnRouteButton(Icons.live_help, 'Request for Help', '/request_for_help'),
             _returnRouteButton(Icons.person, 'Missing Person', '/missing'),
             _returnRouteButton(Icons.home, 'Relief Camps', '/relief'),
             _returnRouteButton(Icons.attach_money, 'Contribute', 'contribute'),
@@ -90,7 +90,9 @@ class _HomeState extends State<Home> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ListTile(
-        onTap: () {},
+        onTap: () {
+          Navigator.pushNamed(context, route);
+        },
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Icon(icon),

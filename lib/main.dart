@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
+import 'help_request.dart';
 void main() => runApp(MyApp());
 const MaterialColor white = const MaterialColor(
   0xFFFFFFFF,
@@ -26,6 +27,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: white,
       ),
       home: Home(),
+      routes:  <String, WidgetBuilder>{
+        '/request_for_help':(BuildContext context) => RequestForHelp(),
+      },
     );
   }
 }
