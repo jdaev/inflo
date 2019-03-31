@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "63647598369",
+    "firebase_url": "https://inflo-dc0d6.firebaseio.com",
+    "project_id": "inflo-dc0d6",
+    "storage_bucket": "inflo-dc0d6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63647598369:android:b8b51426d8a20908",
+        "android_client_info": {
+          "package_name": "com.example.inflo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "63647598369-pn6onfpl1utdbfecibjs52qa1bgfahfu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.inflo",
+            "certificate_hash": "b3b0bcd21d45d4ad840e710e6731c0c4663654c5"
+          }
+        },
+        {
+          "client_id": "63647598369-lckcin3rii5tihhk2sovt3d053igntjp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB90ftnVE-zY3uPK_O_1wHr4j1nnYTZNaw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "63647598369-lckcin3rii5tihhk2sovt3d053igntjp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
