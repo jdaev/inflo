@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'package:inflo/landing.dart';
+import 'package:inflo/login/login_screen.dart';
 import 'help_request.dart';
+
 void main() => runApp(MyApp());
 const MaterialColor white = const MaterialColor(
   0xFFFFFFFF,
@@ -17,18 +19,19 @@ const MaterialColor white = const MaterialColor(
     900: const Color(0xFFFFFFFF),
   },
 );
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        primarySwatch: white,
+        primarySwatch: Colors.red,
       ),
-      home: Home(),
-      routes:  <String, WidgetBuilder>{
-        '/request_for_help':(BuildContext context) => RequestForHelp(),
+      home: LogIn(),
+      routes: <String, WidgetBuilder>{
+        '/request_for_help': (BuildContext context) => RequestForHelp(),
       },
     );
   }
