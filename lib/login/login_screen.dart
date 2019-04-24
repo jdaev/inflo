@@ -50,6 +50,7 @@ class _LogInState extends State<LogIn> {
               MaterialPageRoute(
                   builder: (context) => LandingPage(
                         userName: onValue.toString(),
+                        uid: user.uid,
                       )),
             );
           } else {
@@ -169,7 +170,6 @@ class _LogInState extends State<LogIn> {
 
   Widget loadingScreen() {
     return Container(
-      color: Color(0xFF2C6DFD),
       child: Center(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -184,7 +184,7 @@ class _LogInState extends State<LogIn> {
                 child: LinearProgressIndicator(
                   backgroundColor: Colors.white,
                   valueColor:
-                      new AlwaysStoppedAnimation<Color>(Color(0xFF2C6DFD)),
+                      new AlwaysStoppedAnimation<Color>(Colors.red),
                 )),
           ],
         ),
@@ -215,6 +215,7 @@ class _LogInState extends State<LogIn> {
                 MaterialPageRoute(
                     builder: (context) => LandingPage(
                           userName: onValue.toString(),
+                          uid: user.uid,
                         )),
               );
             } else {
@@ -283,6 +284,7 @@ class _LogInState extends State<LogIn> {
               MaterialPageRoute(
                   builder: (context) => LandingPage(
                         userName: onValue,
+                        uid: user.uid,
                       )),
             );
           } else {
@@ -350,6 +352,7 @@ class _LogInState extends State<LogIn> {
               MaterialPageRoute(
                   builder: (context) => LandingPage(
                         userName: onValue.toString(),
+                        uid: user.uid,
                       )),
             );
           } else {

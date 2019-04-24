@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:inflo/landing.dart';
 import 'package:inflo/login/login_screen.dart';
-import 'help_request.dart';
+import 'package:inflo/pages/crowdsourcing/damages.dart';
+import 'package:inflo/pages/crowdsourcing/exposed_elements.dart';
+import 'package:inflo/pages/crowdsourcing/participation.dart';
+import 'package:inflo/pages/crowdsourcing/water_level.dart';
+import 'pages/emergency_message.dart';
+import 'pages/emergency_toolkit.dart';
 
 void main() => runApp(MyApp());
 const MaterialColor white = const MaterialColor(
@@ -31,7 +35,12 @@ class MyApp extends StatelessWidget {
       ),
       home: LogIn(),
       routes: <String, WidgetBuilder>{
-        '/request_for_help': (BuildContext context) => RequestForHelp(),
+        //'/request_for_help': (BuildContext context) => RequestForHelp(),
+        '/emergency_message': (BuildContext context) => EMessage(),
+        '/participation': (BuildContext context) => Participation(),
+        '/exposed_elements': (BuildContext context) => ExposedElements(),
+        '/damages': (BuildContext context) => Damages(),
+        '/water_level': (BuildContext context) => WaterLevel(),
       },
     );
   }

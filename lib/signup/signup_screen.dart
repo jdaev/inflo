@@ -37,6 +37,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _pinController = new TextEditingController();
   TextEditingController _emailController = new TextEditingController();
   TextEditingController _dateController = new TextEditingController();
+  TextEditingController _ageController = new TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
   Future<Null> _selectDate(BuildContext context) async {
@@ -104,7 +105,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          LandingPage(userName: _nameController.text)),
+                          LandingPage(userName: _nameController.text,uid: user.uid,)),
                 );
               }).catchError((onError) {
                 print(onError);

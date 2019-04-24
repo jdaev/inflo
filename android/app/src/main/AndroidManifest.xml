@@ -10,6 +10,8 @@
         android:name="io.flutter.app.FlutterApplication"
         android:label="inflo"
         android:icon="@mipmap/ic_launcher">
+         <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyBU-x64rSYjJHv6JrRes0VSTFU5ivTy6kk"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -30,4 +32,12 @@
             </intent-filter>
         </activity>
     </application>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />  
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />  
+    <uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.FLASHLIGHT" />
+<uses-feature android:name="android.hardware.camera" />
+<uses-feature android:name="android.hardware.camera.autofocus" />
+<uses-feature android:name="android.hardware.camera.flash" />
 </manifest>

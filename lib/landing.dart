@@ -1,12 +1,27 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:bubbled_navigation_bar/bubbled_navigation_bar.dart';
 import 'package:flutter/rendering.dart';
+import 'package:inflo/pages/map_sample.dart';
+import 'package:inflo/pages/personal_plan/add_contacts.dart';
+import 'package:inflo/profile/profile.dart';
+import 'package:inflo/pages/crowdsourcing/crowdsourcing_dash.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:inflo/pages/contacts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:inflo/pages/personal_plan/personal_plan_dash.dart';
+import 'package:location/location.dart';
+import 'package:flutter/services.dart';
+import 'pages/emergency_message.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LandingPage extends StatefulWidget {
   final String userName;
-
-  const LandingPage({Key key, this.userName}) : super(key: key);
+  final String uid;
+  final List userDoc;
+  const LandingPage({Key key, this.userName, this.uid, this.userDoc}) : super(key: key);
 
   @override
   _LandingPageState createState() => _LandingPageState();
@@ -14,14 +29,22 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   PageController _pageController;
+  String userDocumentPath;
+  Future userDocument;
+  Map documentMap;
+  String title;
+  Color color;
+  LocationData nowLocation;
   MenuPositionController _menuPositionController;
+  AppBar appbar = new AppBar();
+  double padding;
   bool userPageDragging = false;
   final titles = ['Home', 'Call', 'Map', 'Info', 'Profile'];
   final colors = [
     Colors.red,
     Colors.purple,
-    Colors.teal,
     Colors.green,
+    Colors.teal,
     Colors.cyan
   ];
   final icons = [
@@ -31,7 +54,7 @@ class _LandingPageState extends State<LandingPage> {
     Icons.info,
     Icons.person
   ];
-
+  int _currentPage = 0;
   @override
   void initState() {
     _menuPositionController = MenuPositionController(initPosition: 0);
@@ -39,8 +62,63 @@ class _LandingPageState extends State<LandingPage> {
     _pageController =
         PageController(initialPage: 0, keepPage: false, viewportFraction: 1.0);
     _pageController.addListener(handlePageChange);
+    PermissionHandler().requestPermissions([PermissionGroup.contacts]);
+    Firestore.instance
+        .collection('users')
+        .where('uid', isEqualTo: widget.uid)
+        .getDocuments()
+        .then((onValue) {
+      setState(() {
+        padding = MediaQuery.of(context).padding.top;
 
+        userDocumentPath = onValue.documents[0].documentID;
+        documentMap =  onValue.documents[0].data ;
+        title = 'Inflo';
+        color = Colors.red;
+      });
+    });
+    
+
+    initPlatformState();
     super.initState();
+  }
+
+  Location _locationService = new Location();
+  bool _permission = false;
+  String error;
+
+  initPlatformState() async {
+    LocationData location;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      bool serviceStatus = await _locationService.serviceEnabled();
+      //print("Service status: $serviceStatus");
+      if (serviceStatus) {
+        _permission = await _locationService.requestPermission();
+        //print("Permission: $_permission");
+        if (_permission) {
+          location = await _locationService.getLocation();
+        }
+      } else {
+        bool serviceStatusResult = await _locationService.requestService();
+        print("Service status activated after request: $serviceStatusResult");
+        if (serviceStatusResult) {
+          initPlatformState();
+        }
+      }
+    } on PlatformException catch (e) {
+      print(e);
+      if (e.code == 'PERMISSION_DENIED') {
+        error = e.message;
+      } else if (e.code == 'SERVICE_STATUS_ERROR') {
+        error = e.message;
+      }
+      location = null;
+    }
+
+    setState(() {
+      nowLocation = location;
+    });
   }
 
   void handlePageChange() {
@@ -61,44 +139,60 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> _children = [
+      _homePage(),
+      _callsPage(),
+      _mapPage(),
+      _infoPage(),
+      _profilePage(),
+    ];
+
+    List<String> titles = [
+      'InFlo',
+      'Important Numbers',
+      'Map',
+      'Citizens Floodkit',
+      'Profile'
+    ];
+
     return Scaffold(
-        body: NotificationListener<ScrollNotification>(
-          onNotification: (scrollNotification) {
-            checkUserDragging(scrollNotification);
-          },
-          child: PageView(
-            controller: _pageController,
-            children: [
-              _homePage(),
-              _callsPage(),
-              _mapPage(),
-              _infoPage(),
-              _profilePage(),
-            ],
-            onPageChanged: (page) {},
-          ),
+        floatingActionButton: _currentPage == 1
+            ? FloatingActionButton.extended(
+                icon: Icon(Icons.add),
+                label: Text('ADD'),
+                backgroundColor: colors[1],
+                onPressed: () async {
+                  ContactsService.getContacts(withThumbnails: false)
+                      .then((onValue) {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                AddContacts(contacts: onValue,path: userDocumentPath,)));
+                  });
+                },
+              )
+            : null,
+        appBar: AppBar(
+          title: Text(titles.elementAt(_currentPage)),
+          backgroundColor: colors.elementAt(_currentPage),
         ),
-        bottomNavigationBar: BubbledNavigationBar(
-          controller: _menuPositionController,
-          initialIndex: 0,
-          itemMargin: EdgeInsets.symmetric(horizontal: 8),
-          backgroundColor: Colors.white,
-          defaultBubbleColor: Colors.blue,
+        body: _children.elementAt(_currentPage),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentPage,
           onTap: (index) {
-            _pageController.animateToPage(index,
-                curve: Curves.easeInOutQuad,
-                duration: Duration(milliseconds: 500));
+            setState(() {
+              _currentPage = index;
+            });
           },
           items: titles.map((title) {
             var index = titles.indexOf(title);
             var color = colors[index];
-            return BubbledNavigationBarItem(
+            return BottomNavigationBarItem(
               icon: getIcon(index, color),
-              activeIcon: getIcon(index, Colors.white),
-              bubbleColor: color,
               title: Text(
                 title,
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: color, fontSize: 12),
               ),
             );
           }).toList(),
@@ -106,77 +200,158 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Widget _mapPage() {
-    return Container();
+    //WARNING MAP
+    //From this display users can access a Weather Map where Warning on risk/emergency
+    //situations are displayed.
+    //The GPS location of user is overlaid on Google Map and other thematic maps by API services.
+
+    return MapSample(
+      location: nowLocation,
+    );
   }
 
   Widget _infoPage() {
-    return Container();
+    return Container(
+      child: PersonalPlan(),
+    );
   }
 
   Widget _profilePage() {
-    return Container();
+    return ProfileScreen(
+      userId: widget.uid,
+      userDocumentPath: userDocumentPath,
+    );
   }
 
   Widget _callsPage() {
-    return Container();
+
+    return Container(
+      child: ContactsPage(contacts: documentMap['contacts'],),
+    );
   }
 
   Widget _homePage() {
+    //Crowdsourcing Button
+    //Personal Floodplan
+    //Welcome & Current Weather
+    //Emergency Toolkit
+    //Emergency Message Tool
     return Container(
-      child: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            SizedBox(
-              height: MediaQuery.of(context).padding.top,
-            ),
-            SizedBox(
-              height: 128,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  elevation: 8.0,
-                  margin: EdgeInsets.all(8),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                          child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Sunny Side Up',
-                          textScaleFactor: 1.5,
-                        ),
-                      )),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.wb_sunny,
-                          color: Colors.yellow,
-                          size: 84,
-                        ),
-                      ),
-                    ],
+      child: CustomScrollView(
+        slivers: <Widget>[
+          SliverList(
+            delegate: SliverChildListDelegate([
+              Row(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                        height: 130,
+                        width: 130,
+                        child: SvgPicture.asset(
+                          'assets/svg/alert.svg',
+                        )),
                   ),
-                ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: <Widget>[
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          child: FlatButton(
+                            color: Colors.red,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(50.0),
+                                    bottomLeft: Radius.circular(50.0))),
+                            child: Row(
+                              children: <Widget>[
+                                Flexible(
+                                  child: Icon(
+                                    Icons.message,
+                                    color: Colors.white,
+                                  ),
+                                  flex: 1,
+                                ),
+                                SizedBox(
+                                  width: 8.0,
+                                ),
+                                Flexible(
+                                    child: Text(
+                                      'EMERGENCY MESSAGE',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .subtitle
+                                          .copyWith(color: Colors.white),
+                                    ),
+                                    flex: 3),
+                              ],
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EMessage(
+                                            currentLocation: nowLocation,
+                                          )));
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          height: 8.0,
+                        ),
+                        Container(
+                          width: 220,
+                          height: 48,
+                          child: FlatButton(
+                            color: Colors.grey[600],
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(50.0),
+                                    bottomLeft: Radius.circular(50.0))),
+                            child: Row(
+                              children: <Widget>[
+                                Flexible(
+                                  child: Icon(
+                                    Icons.local_hospital,
+                                    color: Colors.white,
+                                  ),
+                                  flex: 1,
+                                ),
+                                SizedBox(
+                                  width: 8.0,
+                                ),
+                                Flexible(
+                                    child: Text(
+                                      'VOLUNTEER',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .subtitle
+                                          .copyWith(color: Colors.white),
+                                    ),
+                                    flex: 3),
+                              ],
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EMessage(
+                                            currentLocation: nowLocation,
+                                          )));
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
               ),
-            ),
-            _returnRouteButton(
-                Icons.live_help, 'Request for Help', '/request_for_help'),
-            _returnRouteButton(Icons.person, 'Missing Person', '/missing'),
-            _returnRouteButton(Icons.home, 'Relief Camps', '/relief'),
-            _returnRouteButton(Icons.attach_money, 'Contribute', 'contribute'),
-            _returnRouteButton(
-                Icons.location_on, 'Needs & Collection Centers', 'collections'),
-            _returnRouteButton(
-                Icons.person, 'Volunteer & NGO Companies', '/volunteer'),
-            _returnRouteButton(Icons.map, 'Maps', '/maps'),
-            _returnRouteButton(Icons.phone_android, 'Contact Info', '/contact'),
-            _returnRouteButton(Icons.list, 'Registered Requests', '/requests'),
-            _returnRouteButton(
-                Icons.announcement, 'Announcements', '/announcements'),
-            _returnRouteButton(Icons.work,
-                'Private Relief & Collection Centers', '/privaterelief')
-          ],
-        ),
+            ]),
+          ),
+          CrowdsourcingDash(uid: widget.uid,userDocRef: userDocumentPath,userDoc: documentMap,)
+        ],
       ),
     );
   }
@@ -204,6 +379,18 @@ class _LandingPageState extends State<LandingPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
       child: Icon(icons[index], size: 30, color: color),
+    );
+  }
+
+  Padding getActiveIcon(int index, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Container(
+          child: Icon(icons[index], size: 30, color: color),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          )),
     );
   }
 }
