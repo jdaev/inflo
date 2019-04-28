@@ -41,10 +41,10 @@ class _ExposedElementsState extends State<ExposedElements> {
       });
     }
 
-    String lage;
-    String uage;
-    String lat;
-    String long;
+    String lage='';
+    String uage='';
+    String lat='';
+    String long='';
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -104,7 +104,13 @@ class _ExposedElementsState extends State<ExposedElements> {
                       child: RangeSlider(
                         lowerValue: 0,
                         upperValue: 100,
+                        valueIndicatorMaxDecimals: 0,
+                        
                         max: 100,
+                        onChangeEnd: (lvalue, uvalue) {
+                          lage = lvalue.toString();
+                          uage = uvalue.toString();
+                        },
                         onChanged: (lvalue, uvalue) {
                           lage = lvalue.toString();
                           uage = uvalue.toString();
@@ -159,6 +165,8 @@ class _ExposedElementsState extends State<ExposedElements> {
                       'description': _description.text,
                       'lattitude': location[0],
                       'longitude': location[1],
+                      'name': widget.userData['name'],
+                      'phone': widget.userData['phone']
                     }).then((onValue) {
                       Navigator.pop(context);
                     });

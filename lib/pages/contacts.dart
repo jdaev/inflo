@@ -24,7 +24,8 @@ class ContactsPage extends StatelessWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: contacts[index]['phone']
                               .map<Widget>(
                                 (i) => Text(
@@ -53,14 +54,17 @@ class ContactsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(contacts);
-    return Container(
-      margin: EdgeInsets.all(8.0),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemBuilder: _buildList,
-        itemCount: contacts.length,
-      ),
-    );
+    if (contacts != null) {
+      return Container(
+        margin: EdgeInsets.all(8.0),
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemBuilder: _buildList,
+          itemCount: contacts.length,
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 }

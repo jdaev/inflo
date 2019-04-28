@@ -89,7 +89,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       body: MultiPageForm(
           totalPage: 3,
-          pageList: <Widget>[page1(), page4(), page2(), page3()],
+          pageList: <Widget>[page1(), page4(), page3()],
           onFormSubmitted: () {
             FirebaseAuth.instance.currentUser().then((user) {
               Firestore.instance.collection('users').add({

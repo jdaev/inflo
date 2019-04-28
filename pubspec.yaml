@@ -19,7 +19,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  bubbled_navigation_bar: ^0.0.4
   cupertino_icons: ^0.1.2
   flutter_auth_buttons: ^0.3.1
   cloud_firestore: ^0.9.13+1
@@ -32,7 +31,6 @@ dependencies:
   flutter_range_slider: "^1.1.0"
   flutter_svg: ^0.12.4
   google_maps_flutter: ^0.5.7
-  bubble_bottom_bar: ^1.2.0
   location: ^2.3.5
   image_picker: ^0.5.4
   #firebase_storage_image: ^0.2.1
@@ -64,6 +62,7 @@ flutter:
   #  - images/a_dot_ham.jpeg
   assets:
         - assets/loading_cat.png
+        - assets/logo.png
         - assets/svg/raining_girl.svg
         - assets/svg/raining.svg
         - assets/svg/damages.svg
@@ -77,7 +76,13 @@ flutter:
         - assets/svg/flood_equipment.svg
         - assets/svg/warning_codes.svg
         - assets/svg/insurance_cover.svg
-
+        - assets/svg/hazards.svg
+        - assets/svg/life_threat.svg
+        - assets/svg/facilities.svg
+        - assets/svg/hazard_active.svg
+        - assets/svg/life_threat_active.svg
+        - assets/svg/facilities_active.svg
+        - assets/svg/distress.svg
   fonts:
       - family: Rubik
         fonts:

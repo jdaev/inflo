@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:bubbled_navigation_bar/bubbled_navigation_bar.dart';
 import 'package:flutter/rendering.dart';
 import 'package:inflo/pages/map_sample.dart';
 import 'package:inflo/pages/personal_plan/add_contacts.dart';
@@ -10,10 +9,9 @@ import 'package:inflo/profile/profile.dart';
 import 'package:inflo/pages/crowdsourcing/crowdsourcing_dash.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inflo/pages/contacts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:inflo/pages/personal_plan/personal_plan_dash.dart';
+import 'package:inflo/volunteer/volunteer_map.dart';
 import 'package:location/location.dart';
-import 'package:flutter/services.dart';
 import 'pages/emergency_message.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -21,21 +19,20 @@ class LandingPage extends StatefulWidget {
   final String userName;
   final String uid;
   final List userDoc;
-  const LandingPage({Key key, this.userName, this.uid, this.userDoc}) : super(key: key);
+  const LandingPage({Key key, this.userName, this.uid, this.userDoc})
+      : super(key: key);
 
   @override
   _LandingPageState createState() => _LandingPageState();
 }
 
 class _LandingPageState extends State<LandingPage> {
-  PageController _pageController;
   String userDocumentPath;
   Future userDocument;
   Map documentMap;
   String title;
   Color color;
   LocationData nowLocation;
-  MenuPositionController _menuPositionController;
   AppBar appbar = new AppBar();
   double padding;
   bool userPageDragging = false;
@@ -57,12 +54,16 @@ class _LandingPageState extends State<LandingPage> {
   int _currentPage = 0;
   @override
   void initState() {
-    _menuPositionController = MenuPositionController(initPosition: 0);
-
-    _pageController =
-        PageController(initialPage: 0, keepPage: false, viewportFraction: 1.0);
-    _pageController.addListener(handlePageChange);
-    PermissionHandler().requestPermissions([PermissionGroup.contacts]);
+    PermissionHandler().requestPermissions([
+      PermissionGroup.contacts,
+      PermissionGroup.location,
+      PermissionGroup.storage,
+      PermissionGroup.camera,
+      PermissionGroup.phone,
+      PermissionGroup.locationAlways,
+      PermissionGroup.locationWhenInUse,
+      PermissionGroup.sms
+    ]);
     Firestore.instance
         .collection('users')
         .where('uid', isEqualTo: widget.uid)
@@ -72,69 +73,38 @@ class _LandingPageState extends State<LandingPage> {
         padding = MediaQuery.of(context).padding.top;
 
         userDocumentPath = onValue.documents[0].documentID;
-        documentMap =  onValue.documents[0].data ;
+        documentMap = onValue.documents[0].data;
         title = 'Inflo';
         color = Colors.red;
       });
     });
-    
 
     initPlatformState();
     super.initState();
   }
 
   Location _locationService = new Location();
-  bool _permission = false;
   String error;
 
   initPlatformState() async {
     LocationData location;
     // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      bool serviceStatus = await _locationService.serviceEnabled();
-      //print("Service status: $serviceStatus");
-      if (serviceStatus) {
-        _permission = await _locationService.requestPermission();
-        //print("Permission: $_permission");
-        if (_permission) {
-          location = await _locationService.getLocation();
-        }
-      } else {
-        bool serviceStatusResult = await _locationService.requestService();
-        print("Service status activated after request: $serviceStatusResult");
-        if (serviceStatusResult) {
-          initPlatformState();
-        }
+
+    bool serviceStatus = await _locationService.serviceEnabled();
+    //print("Service status: $serviceStatus");
+    if (serviceStatus) {
+      location = await _locationService.getLocation();
+    } else {
+      bool serviceStatusResult = await _locationService.requestService();
+      print("Service status activated after request: $serviceStatusResult");
+      if (serviceStatusResult) {
+        initPlatformState();
       }
-    } on PlatformException catch (e) {
-      print(e);
-      if (e.code == 'PERMISSION_DENIED') {
-        error = e.message;
-      } else if (e.code == 'SERVICE_STATUS_ERROR') {
-        error = e.message;
-      }
-      location = null;
     }
 
     setState(() {
       nowLocation = location;
     });
-  }
-
-  void handlePageChange() {
-    _menuPositionController.absolutePosition = _pageController.page;
-  }
-
-  void checkUserDragging(ScrollNotification scrollNotification) {
-    if (scrollNotification is UserScrollNotification &&
-        scrollNotification.direction != ScrollDirection.idle) {
-      userPageDragging = true;
-    } else if (scrollNotification is ScrollEndNotification) {
-      userPageDragging = false;
-    }
-    if (userPageDragging) {
-      _menuPositionController.findNearestTarget(_pageController.page);
-    }
   }
 
   @override
@@ -167,8 +137,10 @@ class _LandingPageState extends State<LandingPage> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (BuildContext context) =>
-                                AddContacts(contacts: onValue,path: userDocumentPath,)));
+                            builder: (BuildContext context) => AddContacts(
+                                  contacts: onValue,
+                                  path: userDocumentPath,
+                                )));
                   });
                 },
               )
@@ -224,9 +196,10 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Widget _callsPage() {
-
     return Container(
-      child: ContactsPage(contacts: documentMap['contacts'],),
+      child: ContactsPage(
+        contacts: documentMap!=null?documentMap['contacts']:null,
+      ),
     );
   }
 
@@ -337,8 +310,9 @@ class _LandingPageState extends State<LandingPage> {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => EMessage(
-                                            currentLocation: nowLocation,
+                                      builder: (context) => VolunteerMap(
+                                            uid: widget.uid,
+                                            uname: widget.userName,
                                           )));
                             },
                           ),
@@ -350,27 +324,12 @@ class _LandingPageState extends State<LandingPage> {
               ),
             ]),
           ),
-          CrowdsourcingDash(uid: widget.uid,userDocRef: userDocumentPath,userDoc: documentMap,)
+          CrowdsourcingDash(
+            uid: widget.uid,
+            userDocRef: userDocumentPath,
+            userDoc: documentMap,
+          )
         ],
-      ),
-    );
-  }
-
-  Widget _returnRouteButton(IconData icon, String title, String route) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ListTile(
-        onTap: () {
-          Navigator.pushNamed(context, route);
-        },
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Icon(icon),
-        ),
-        title: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(title),
-        ),
       ),
     );
   }

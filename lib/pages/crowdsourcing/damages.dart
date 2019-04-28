@@ -288,14 +288,20 @@ class _DamagesState extends State<Damages> {
                         FirebaseStorage.instance.ref().child(fileName);
                     final StorageUploadTask task =
                         firebaseStorageRef.putFile(_image);
-                    Firestore.instance.collection('water_level').add({
-                      'uid': widget.uid,
-                      'file_name': fileName,
-                      'view_type': viewType,
-                      'damage_type': _currentDamage,
-                      'no_involved': _noInvolved.text,
-                      'lattitude': location[0],
-                      'longitude': location[1],
+                    task.onComplete.then((onValue) {
+                      Firestore.instance.collection('damages').add({
+                        'uid': widget.uid,
+                        'file_name': fileName,
+                        'view_type': viewType,
+                        'damage_type': _currentDamage,
+                        'no_involved': _noInvolved.text,
+                        'lattitude': location[0],
+                        'longitude': location[1],
+                        'name': widget.userData['name'],
+                        'phone': widget.userData['phone']
+                      }).then((val) {
+                        Navigator.pop(context);
+                      });
                     });
                   } else {
                     Firestore.instance.collection('damages').add({
@@ -305,6 +311,10 @@ class _DamagesState extends State<Damages> {
                       'no_involved': _noInvolved.text,
                       'lattitude': location[0],
                       'longitude': location[1],
+                      'name': widget.userData['name'],
+                      'phone': widget.userData['phone']
+                    }).then((val) {
+                      Navigator.pop(context);
                     });
                   }
                 },

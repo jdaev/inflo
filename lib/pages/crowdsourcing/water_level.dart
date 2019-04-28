@@ -185,14 +185,18 @@ class _WaterLevelState extends State<WaterLevel> {
                         FirebaseStorage.instance.ref().child(fileName);
                     final StorageUploadTask task =
                         firebaseStorageRef.putFile(_image);
-                    Firestore.instance.collection('water_level').add({
-                      'uid': widget.uid,
-                      'file_name': fileName,
-                      'water_level': waterLevel.text,
-                      'lattitude': location[0],
-                      'longitude': location[1],
-                    }).then((onValue) {
-                      Navigator.pop(context);
+                    task.onComplete.then((onValue) {
+                      Firestore.instance.collection('water_level').add({
+                        'uid': widget.uid,
+                        'file_name': fileName,
+                        'water_level': waterLevel.text,
+                        'lattitude': location[0],
+                        'longitude': location[1],
+                        'name': widget.userData['name'],
+                        'phone': widget.userData['phone']
+                      }).then((onValue) {
+                        Navigator.pop(context);
+                      });
                     });
                   } else {
                     Firestore.instance.collection('water_level').add({
@@ -200,6 +204,8 @@ class _WaterLevelState extends State<WaterLevel> {
                       'water_level': waterLevel.text,
                       'lattitude': location[0],
                       'longitude': location[1],
+                      'name': widget.userData['name'],
+                      'phone': widget.userData['phone']
                     }).then((onValue) {
                       Navigator.pop(context);
                     });

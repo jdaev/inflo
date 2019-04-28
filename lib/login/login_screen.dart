@@ -72,7 +72,7 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: bodyWidget);
+    return Scaffold(body: bodyWidget,resizeToAvoidBottomInset: true,);
   }
 
   Widget loginBox() {
@@ -81,17 +81,18 @@ class _LogInState extends State<LogIn> {
             decoration: new BoxDecoration(//color: Color(0xFF2C6DFD)
                 ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Expanded(
-                  child: Center(child: Container()
-                      //SizedBox(width: 256, child: Image.asset('assets/logo.png')),
-                      ),
+                Center(
+                  child: SizedBox(
+                      width: 256, child: Image.asset('assets/logo.png')),
                 ),
                 Stack(
                   children: <Widget>[
                     Card(
                       elevation: 8.0,
-                      margin: EdgeInsets.fromLTRB(16, 16, 16, 100),
+                      margin: EdgeInsets.fromLTRB(16, 16, 16, 16),
                       child: SizedBox(
                         //height: 200,
                         child: Column(
@@ -124,8 +125,7 @@ class _LogInState extends State<LogIn> {
                             ),
                             FlatButton(
                               child: Text('LOG IN',
-                                  style: TextStyle(
-                                      color: Color(0xFF2C6DFD), fontSize: 16)),
+                                  style: TextStyle(fontSize: 16)),
                               onPressed: () async {
                                 // verifyPhone();
                                 _verifyPhoneNumber(scaffoldContext);
@@ -175,16 +175,15 @@ class _LogInState extends State<LogIn> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SizedBox(width: 120, child: Image.asset('assets/logo.png')),
+            SizedBox(width: 240, child: Image.asset('assets/logo.png')),
             SizedBox(
-              height: 8,
+              height: 32,
             ),
             SizedBox(
-                width: 128,
+                width: 240,
                 child: LinearProgressIndicator(
                   backgroundColor: Colors.white,
-                  valueColor:
-                      new AlwaysStoppedAnimation<Color>(Colors.red),
+                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
                 )),
           ],
         ),
