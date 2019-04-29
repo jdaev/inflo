@@ -198,7 +198,7 @@ class _LandingPageState extends State<LandingPage> {
   Widget _callsPage() {
     return Container(
       child: ContactsPage(
-        contacts: documentMap!=null?documentMap['contacts']:null,
+        contacts: documentMap != null ? documentMap['contacts'] : null,
       ),
     );
   }
@@ -267,6 +267,9 @@ class _LandingPageState extends State<LandingPage> {
                                   MaterialPageRoute(
                                       builder: (context) => EMessage(
                                             currentLocation: nowLocation,
+                                            contacts: documentMap != null
+                                                ? documentMap['contacts']
+                                                : null,
                                           )));
                             },
                           ),
