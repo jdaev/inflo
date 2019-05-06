@@ -38,6 +38,7 @@ dependencies:
   flutter_sms: ^0.2.0
   contacts_service: ^0.2.5
   permission_handler: ^3.0.0
+  firebase_messaging: ^4.0.0+4
 
 
 dev_dependencies:

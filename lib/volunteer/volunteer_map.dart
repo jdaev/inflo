@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:inflo/pages/map_sample.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -12,8 +12,9 @@ import 'package:inflo/volunteer/facilities.dart';
 class VolunteerMap extends StatefulWidget {
   final String uid;
   final String uname;
-
-  const VolunteerMap({Key key, this.uid, this.uname}) : super(key: key);
+  final String phone;
+  const VolunteerMap({Key key, this.uid, this.uname, this.phone})
+      : super(key: key);
   @override
   _VolunteerMapState createState() => _VolunteerMapState();
 }
@@ -21,6 +22,7 @@ class VolunteerMap extends StatefulWidget {
 class _VolunteerMapState extends State<VolunteerMap> {
   LocationData location;
   CameraPosition home;
+  Timer timer;
   List<Marker> allMarkers = [];
   Completer<GoogleMapController> _controller = Completer();
   bool active = false;
@@ -40,6 +42,74 @@ class _VolunteerMapState extends State<VolunteerMap> {
                     context: context,
                     builder: (BuildContext context) =>
                         HazardDialog(data: i.data));
+              },
+            ),
+            position: LatLng(i.data['lattitude'], i.data['longitude'])));
+      });
+    }
+  }
+
+  void createExposedMarkers(List<DocumentSnapshot> markerData) {
+    for (DocumentSnapshot i in markerData) {
+      setState(() {
+        allMarkers.add(Marker(
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueYellow),
+            markerId: MarkerId(
+                'Exposed Element ${i.data['lattitude']} ${i.data['longitude']}'),
+            infoWindow: InfoWindow(
+              title: 'Exposed Element Reported By ${i.data['name']}',
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) => ExposedDialog(
+                          data: i.data,
+                          docId: i.documentID,
+                        ));
+              },
+            ),
+            position: LatLng(i.data['lattitude'], i.data['longitude'])));
+      });
+    }
+  }
+
+  void createDamagedMarkers(List<DocumentSnapshot> markerData) {
+    for (DocumentSnapshot i in markerData) {
+      setState(() {
+        allMarkers.add(Marker(
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            markerId: MarkerId(
+                'Damage ${i.data['lattitude']} ${i.data['longitude']}'),
+            infoWindow: InfoWindow(
+              title: 'Damages Reported By ${i.data['name']}',
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) =>
+                        DamageDialog(data: i.data));
+              },
+            ),
+            position: LatLng(i.data['lattitude'], i.data['longitude'])));
+      });
+    }
+  }
+
+  void createWaterMarkers(List<DocumentSnapshot> markerData) {
+    for (DocumentSnapshot i in markerData) {
+      setState(() {
+        allMarkers.add(Marker(
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+            markerId: MarkerId(
+                'Water Level ${i.data['lattitude']} ${i.data['longitude']}'),
+            infoWindow: InfoWindow(
+              title: 'Water Level Reported By ${i.data['name']}',
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) =>
+                        WaterDialog(data: i.data));
               },
             ),
             position: LatLng(i.data['lattitude'], i.data['longitude'])));
@@ -69,6 +139,8 @@ class _VolunteerMapState extends State<VolunteerMap> {
     }
   }
 
+  void createVolunteerMarkers(List<DocumentSnapshot> markerData) {}
+
   @override
   void initState() {
     initializeMarkers();
@@ -79,11 +151,24 @@ class _VolunteerMapState extends State<VolunteerMap> {
     var hazardStream = Firestore.instance.collection('hazards').getDocuments();
     var facilitiesStream =
         Firestore.instance.collection('facilities').getDocuments();
-    Future.wait([hazardStream, facilitiesStream])
-        .then((List<QuerySnapshot> responses) => {
-              createHazardsMarkers(responses[0].documents),
-              createFacilitiesMarkers(responses[1].documents),
-            });
+    var exposedStream =
+        Firestore.instance.collection('exposed_elements').getDocuments();
+    var damageStream = Firestore.instance.collection('damages').getDocuments();
+    var waterLevel =
+        Firestore.instance.collection('water_level').getDocuments();
+    Future.wait([
+      hazardStream,
+      facilitiesStream,
+      exposedStream,
+      damageStream,
+      waterLevel
+    ]).then((List<QuerySnapshot> responses) => {
+          createHazardsMarkers(responses[0].documents),
+          createFacilitiesMarkers(responses[1].documents),
+          createExposedMarkers(responses[2].documents),
+          createDamagedMarkers(responses[3].documents),
+          createWaterMarkers(responses[4].documents)
+        });
   }
 
   @override
@@ -129,13 +214,50 @@ class _VolunteerMapState extends State<VolunteerMap> {
                 target: LatLng(locationSnapshot.data.latitude,
                     locationSnapshot.data.longitude),
                 zoom: 14.4746);
+            void updateLocation() {
+              print("Updating Location...");
 
-            return StreamBuilder(
-              stream: Firestore.instance
+              Firestore.instance
                   .collection('volunteer')
-                  .document('volunteerdata')
-                  .snapshots(),
+                  .document('${widget.uid}')
+                  .setData({
+                'uid': widget.uid,
+                'name': widget.uname,
+                'latitude': locationSnapshot.data.latitude,
+                'longitude': locationSnapshot.data.longitude,
+                'distress': false,
+                'phone': widget.phone,
+                'updated_at': FieldValue.serverTimestamp(),
+              });
+            }
+
+            if (active) {
+              const oneMinute = const Duration(seconds: 60);
+              timer = Timer.periodic(oneMinute, (Timer t) => updateLocation());
+            } else if (timer != null) {
+              timer.cancel();
+            }
+            return StreamBuilder(
+              stream: Firestore.instance.collection('volunteer').snapshots(),
               builder: (context, snapshot) {
+                for (DocumentSnapshot i in snapshot.data.documents) {
+                  allMarkers.add(Marker(
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueOrange),
+                      markerId: MarkerId(
+                          'Volunteer ${i.data['latitude']} ${i.data['longitude']}'),
+                      infoWindow: InfoWindow(
+                        title: 'Volunteer ${i.data['name']}',
+                        onTap: () {
+                          // showDialog(
+                          //     context: context,
+                          //     builder: (BuildContext context) =>
+                          //         FacilitiesDialog(data: i.data));
+                        },
+                      ),
+                      position:
+                          LatLng(i.data['latitude'], i.data['longitude'])));
+                }
                 return Column(
                   children: <Widget>[
                     Expanded(

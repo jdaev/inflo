@@ -32,6 +32,8 @@ class _ExposedElementsState extends State<ExposedElements> {
       new TextEditingController();
   TextEditingController _noOfElderlyController = new TextEditingController();
   TextEditingController _description = new TextEditingController();
+  TextEditingController _minAge = new TextEditingController();
+  TextEditingController _maxAge = new TextEditingController();
   var location;
   @override
   Widget build(BuildContext context) {
@@ -41,10 +43,10 @@ class _ExposedElementsState extends State<ExposedElements> {
       });
     }
 
-    String lage='';
-    String uage='';
-    String lat='';
-    String long='';
+    String lage = '';
+    String uage = '';
+    String lat = '';
+    String long = '';
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -96,27 +98,27 @@ class _ExposedElementsState extends State<ExposedElements> {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: <Widget>[
-                    Text('Age'),
+                    Flexible(
+                      flex: 1,
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          hintText: 'Min Age',
+                        ),
+                        controller: _minAge,
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
                     SizedBox(
                       width: 16.0,
                     ),
-                    Expanded(
-                      child: RangeSlider(
-                        lowerValue: 0,
-                        upperValue: 100,
-                        valueIndicatorMaxDecimals: 0,
-                        
-                        max: 100,
-                        onChangeEnd: (lvalue, uvalue) {
-                          lage = lvalue.toString();
-                          uage = uvalue.toString();
-                        },
-                        onChanged: (lvalue, uvalue) {
-                          lage = lvalue.toString();
-                          uage = uvalue.toString();
-                        },
-                        divisions: 100,
-                        showValueIndicator: true,
+                    Flexible(
+                      flex: 1,
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          hintText: 'Max Age',
+                        ),
+                        controller: _maxAge,
+                        keyboardType: TextInputType.number,
                       ),
                     ),
                   ],
@@ -160,13 +162,15 @@ class _ExposedElementsState extends State<ExposedElements> {
                       'no_residents': _noOfResidentsController.text,
                       'no_elderly': _noOfElderlyController.text,
                       'no_ability': _noWithLimitedMobilityController.text,
-                      'l_age': lage,
-                      'u_age': uage,
+                      'l_age': _minAge.text,
+                      'u_age': _maxAge.text,
                       'description': _description.text,
                       'lattitude': location[0],
                       'longitude': location[1],
                       'name': widget.userData['name'],
-                      'phone': widget.userData['phone']
+                      'phone': widget.userData['phone'],
+                      'no_liked':0,
+                      'liked_users':[]
                     }).then((onValue) {
                       Navigator.pop(context);
                     });

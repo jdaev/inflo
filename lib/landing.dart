@@ -14,6 +14,7 @@ import 'package:inflo/volunteer/volunteer_map.dart';
 import 'package:location/location.dart';
 import 'pages/emergency_message.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LandingPage extends StatefulWidget {
   final String userName;
@@ -62,20 +63,30 @@ class _LandingPageState extends State<LandingPage> {
       PermissionGroup.phone,
       PermissionGroup.locationAlways,
       PermissionGroup.locationWhenInUse,
-      PermissionGroup.sms
+      PermissionGroup.sms,
+      
     ]);
-    Firestore.instance
-        .collection('users')
-        .where('uid', isEqualTo: widget.uid)
-        .getDocuments()
-        .then((onValue) {
-      setState(() {
-        padding = MediaQuery.of(context).padding.top;
+    final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+    _firebaseMessaging.requestNotificationPermissions();
+    _firebaseMessaging.subscribeToTopic('notifications');
+    _firebaseMessaging.getToken().then((token) {
+      Firestore.instance
+          .collection('users')
+          .where('uid', isEqualTo: widget.uid)
+          .getDocuments()
+          .then((onValue) {
+        setState(() {
+          padding = MediaQuery.of(context).padding.top;
 
-        userDocumentPath = onValue.documents[0].documentID;
-        documentMap = onValue.documents[0].data;
-        title = 'Inflo';
-        color = Colors.red;
+          userDocumentPath = onValue.documents[0].documentID;
+          documentMap = onValue.documents[0].data;
+          title = 'Inflo';
+          color = Colors.red;
+          Firestore.instance
+              .collection('users')
+              .document(onValue.documents[0].documentID)
+              .updateData({'tokenId': token});
+        });
       });
     });
 
@@ -316,6 +327,7 @@ class _LandingPageState extends State<LandingPage> {
                                       builder: (context) => VolunteerMap(
                                             uid: widget.uid,
                                             uname: widget.userName,
+                                            phone: documentMap['phone'],
                                           )));
                             },
                           ),

@@ -298,7 +298,9 @@ class _DamagesState extends State<Damages> {
                         'lattitude': location[0],
                         'longitude': location[1],
                         'name': widget.userData['name'],
-                        'phone': widget.userData['phone']
+                        'phone': widget.userData['phone'],
+                        'no_liked': 0,
+                        'liked_users': []
                       }).then((val) {
                         Navigator.pop(context);
                       });
@@ -312,7 +314,9 @@ class _DamagesState extends State<Damages> {
                       'lattitude': location[0],
                       'longitude': location[1],
                       'name': widget.userData['name'],
-                      'phone': widget.userData['phone']
+                      'phone': widget.userData['phone'],
+                      'no_liked': 0,
+                      'liked_users': []
                     }).then((val) {
                       Navigator.pop(context);
                     });

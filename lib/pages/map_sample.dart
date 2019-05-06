@@ -30,8 +30,10 @@ class MapSampleState extends State<MapSample> {
               onTap: () {
                 showDialog(
                     context: context,
-                    builder: (BuildContext context) =>
-                        ExposedDialog(data: i.data));
+                    builder: (BuildContext context) => ExposedDialog(
+                          data: i.data,
+                          docId: i.documentID,
+                        ));
               },
             ),
             position: LatLng(i.data['lattitude'], i.data['longitude'])));
@@ -111,15 +113,15 @@ class MapSampleState extends State<MapSample> {
   void initState() {
     if (widget.location == null) {
       initPlatformState();
-    }
-    else{
+    } else {
       setState(() {
-      location = widget.location;
-      home = CameraPosition(
-          target: LatLng(location.latitude, location.longitude), zoom: 14.4746);
-    });
+        location = widget.location;
+        home = CameraPosition(
+            target: LatLng(location.latitude, location.longitude),
+            zoom: 14.4746);
+      });
     }
-    
+
     var exposedStream =
         Firestore.instance.collection('exposed_elements').getDocuments();
     var damageStream = Firestore.instance.collection('damages').getDocuments();
@@ -154,7 +156,8 @@ class MapSampleState extends State<MapSample> {
 
 class ExposedDialog extends StatelessWidget {
   final Map data;
-  ExposedDialog({this.data});
+  final String docId;
+  ExposedDialog({this.data, this.docId});
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +205,7 @@ class ExposedDialog extends StatelessWidget {
                   'No. of Elderly: ' +
                   data['no_elderly'] +
                   '\n'
-                  'No. with Limited Mobilty: ' +
+                      'No. with Limited Mobilty: ' +
                   data['no_ability'] +
                   '\n' +
                   'Age Range: ' +
@@ -219,11 +222,21 @@ class ExposedDialog extends StatelessWidget {
             SizedBox(height: 24.0),
             Align(
               alignment: Alignment.bottomRight,
-              child: FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // To close the dialog
-                },
-                child: Text('GO BACK'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  UpvoteButton(
+                    data: data,
+                    docId: docId,
+                    collection: 'exposed_elements',
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // To close the dialog
+                    },
+                    child: Text('GO BACK'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -233,9 +246,92 @@ class ExposedDialog extends StatelessWidget {
   }
 }
 
+class UpvoteButton extends StatefulWidget {
+  final Map data;
+  final String docId;
+  final String collection;
+
+  const UpvoteButton({Key key, this.data, this.docId, this.collection})
+      : super(key: key);
+  @override
+  _UpvoteButtonState createState() => _UpvoteButtonState();
+}
+
+class _UpvoteButtonState extends State<UpvoteButton> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: Firestore.instance
+            .collection(widget.collection)
+            .document(widget.docId)
+            .snapshots(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.data['liked_users'].contains(widget.data['uid'])) {
+            return Row(
+              children: <Widget>[
+                Text(snapshot.data['no_liked'].toString()),
+                InkWell(
+                  onTap: () {
+                    Firestore.instance
+                        .collection(widget.collection)
+                        .document(widget.docId)
+                        .updateData({
+                      'no_liked': widget.data['no_liked'] - 1,
+                      'liked_users':
+                          FieldValue.arrayRemove([widget.data['uid']])
+                    }).then((onValue) {
+                      setState(() {});
+                    });
+                  },
+                  child: SizedBox(
+                    width: 32,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.green,
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            );
+          } else {
+            return Row(
+              children: <Widget>[
+                Text(snapshot.data['no_liked'].toString()),
+                InkWell(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      width: 32,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    Firestore.instance
+                        .collection(widget.collection)
+                        .document(widget.docId)
+                        .updateData({
+                      'no_liked': widget.data['no_liked'] + 1,
+                      'liked_users': FieldValue.arrayUnion([widget.data['uid']])
+                    }).then((onValue) {
+                      setState(() {});
+                    });
+                  },
+                )
+              ],
+            );
+          }
+        });
+  }
+}
+
 class DamageDialog extends StatelessWidget {
   final Map data;
-  DamageDialog({this.data});
+  final String docId;
+  DamageDialog({this.data, this.docId});
 
   @override
   Widget build(BuildContext context) {
@@ -273,22 +369,22 @@ class DamageDialog extends StatelessWidget {
             SizedBox(height: 16.0),
             Text(
               'Reported by ' +
-                      data['name'] +
-                      '\nContact ' +
-                      data['phone'] +
-                      '\n\n' +
-                      'View Type: ' +
-                      data['view_type'] +
-                      '\n' +
-                      'Damage Type: ' +
-                      data['damage_type'] +
-                      '\n'
+                  data['name'] +
+                  '\nContact ' +
+                  data['phone'] +
+                  '\n\n' +
+                  'View Type: ' +
+                  data['view_type'] +
+                  '\n' +
+                  'Damage Type: ' +
+                  data['damage_type'] +
+                  '\n'
                       'No. of people invloved: ' +
-                      data['no_involved'] +
-                      '\n' +
-                      '\nImage Link: \n' //+
-                  //data['file_name']
-                  ,
+                  data['no_involved'] +
+                  '\n' +
+                  '\nImage Link: \n' //+
+              //data['file_name']
+              ,
               style: TextStyle(
                 fontSize: 16.0,
               ),
@@ -296,11 +392,21 @@ class DamageDialog extends StatelessWidget {
             SizedBox(height: 24.0),
             Align(
               alignment: Alignment.bottomRight,
-              child: FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // To close the dialog
-                },
-                child: Text('GO BACK'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  UpvoteButton(
+                    data: data,
+                    docId: docId,
+                    collection: 'damages',
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // To close the dialog
+                    },
+                    child: Text('GO BACK'),
+                  ),
+                ],
               ),
             ),
           ],
@@ -312,7 +418,8 @@ class DamageDialog extends StatelessWidget {
 
 class WaterDialog extends StatelessWidget {
   final Map data;
-  WaterDialog({this.data});
+  final String docId;
+  WaterDialog({this.data, this.docId});
 
   @override
   Widget build(BuildContext context) {
@@ -367,11 +474,21 @@ class WaterDialog extends StatelessWidget {
             SizedBox(height: 24.0),
             Align(
               alignment: Alignment.bottomRight,
-              child: FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // To close the dialog
-                },
-                child: Text('GO BACK'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  UpvoteButton(
+                    data: data,
+                    docId: docId,
+                    collection: 'water_level',
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // To close the dialog
+                    },
+                    child: Text('GO BACK'),
+                  ),
+                ],
               ),
             ),
           ],
