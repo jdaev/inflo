@@ -180,12 +180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         } else {
-          return Scaffold(
-            appBar: new AppBar(
-              title: Text('Profile'),
-            ),
-            body: LinearProgressIndicator(),
-          );
+          return LinearProgressIndicator();
+          
         }
       },
     );

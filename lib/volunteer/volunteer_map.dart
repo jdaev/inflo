@@ -91,7 +91,7 @@ class _VolunteerMapState extends State<VolunteerMap> {
                 showDialog(
                     context: context,
                     builder: (BuildContext context) =>
-                        DamageDialog(data: i.data));
+                        DamageDialog(data: i.data,docId: i.documentID,));
               },
             ),
             position: LatLng(i.data['lattitude'], i.data['longitude'])));
@@ -113,7 +113,7 @@ class _VolunteerMapState extends State<VolunteerMap> {
                 showDialog(
                     context: context,
                     builder: (BuildContext context) =>
-                        WaterDialog(data: i.data));
+                        WaterDialog(data: i.data,docId: i.documentID,));
               },
             ),
             position: LatLng(i.data['lattitude'], i.data['longitude'])));
@@ -145,8 +145,10 @@ class _VolunteerMapState extends State<VolunteerMap> {
     }
   }
 
+  List<String> volunteerMarkerUID = [];
   void createRequestsMarkers(List<DocumentSnapshot> markerData) {
     for (DocumentSnapshot i in markerData) {
+      if(!volunteerMarkerUID.contains(i.data['uid'])){
       setState(() {
         allMarkers.add(Marker(
             icon:
@@ -165,11 +167,32 @@ class _VolunteerMapState extends State<VolunteerMap> {
               },
             ),
             position: LatLng(i.data['latitude'], i.data['longitude'])));
-      });
+        volunteerMarkerUID.add(i.data['uid']);
+      });}
     }
   }
 
-  void createVolunteerMarkers(List<DocumentSnapshot> markerData) {}
+  void createVolunteerMarkers(List<DocumentSnapshot> markerData) {
+    for (DocumentSnapshot i in markerData) {
+      if (i.data['uid'] != widget.uid) {
+        allMarkers.add(Marker(
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueOrange),
+            markerId: MarkerId(
+                'Volunteer ${i.data['latitude']} ${i.data['longitude']}'),
+            infoWindow: InfoWindow(
+              title: 'Volunteer ${i.data['name']}',
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) =>
+                        VolunteerDialog(data: i.data));
+              },
+            ),
+            position: LatLng(i.data['latitude'], i.data['longitude'])));
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -187,21 +210,23 @@ class _VolunteerMapState extends State<VolunteerMap> {
     var waterLevel =
         Firestore.instance.collection('water_level').getDocuments();
     var requests = Firestore.instance.collection('requests').getDocuments();
-
+    var volunteer = Firestore.instance.collection('volunteer').getDocuments();
     Future.wait([
       hazardStream,
       facilitiesStream,
       exposedStream,
       damageStream,
       waterLevel,
-      requests
+      requests,
+      volunteer
     ]).then((List<QuerySnapshot> responses) => {
           createHazardsMarkers(responses[0].documents),
           createFacilitiesMarkers(responses[1].documents),
           createExposedMarkers(responses[2].documents),
           createDamagedMarkers(responses[3].documents),
           createWaterMarkers(responses[4].documents),
-          createRequestsMarkers(responses[5].documents)
+          createRequestsMarkers(responses[5].documents),
+          createVolunteerMarkers(responses[6].documents),
         });
   }
 
@@ -258,7 +283,6 @@ class _VolunteerMapState extends State<VolunteerMap> {
                 'name': widget.uname,
                 'latitude': locationSnapshot.data.latitude,
                 'longitude': locationSnapshot.data.longitude,
-                'distress': false,
                 'phone': widget.phone,
                 'updated_at': FieldValue.serverTimestamp(),
               });
@@ -273,24 +297,6 @@ class _VolunteerMapState extends State<VolunteerMap> {
             return StreamBuilder(
               stream: Firestore.instance.collection('volunteer').snapshots(),
               builder: (context, snapshot) {
-                for (DocumentSnapshot i in snapshot.data.documents) {
-                  allMarkers.add(Marker(
-                      icon: BitmapDescriptor.defaultMarkerWithHue(
-                          BitmapDescriptor.hueOrange),
-                      markerId: MarkerId(
-                          'Volunteer ${i.data['latitude']} ${i.data['longitude']}'),
-                      infoWindow: InfoWindow(
-                        title: 'Volunteer ${i.data['name']}',
-                        onTap: () {
-                          showDialog(
-                              context: context,
-                              builder: (BuildContext context) =>
-                                  VolunteerDialog(data: i.data));
-                        },
-                      ),
-                      position:
-                          LatLng(i.data['latitude'], i.data['longitude'])));
-                }
                 return Column(
                   children: <Widget>[
                     Expanded(
