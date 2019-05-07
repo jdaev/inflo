@@ -300,7 +300,7 @@ class _DamagesState extends State<Damages> {
                         'name': widget.userData['name'],
                         'phone': widget.userData['phone'],
                         'no_liked': 0,
-                        'liked_users': []
+                        'liked_users': [widget.uid]
                       }).then((val) {
                         Navigator.pop(context);
                       });
@@ -316,7 +316,7 @@ class _DamagesState extends State<Damages> {
                       'name': widget.userData['name'],
                       'phone': widget.userData['phone'],
                       'no_liked': 0,
-                      'liked_users': []
+                      'liked_users': [widget.uid]
                     }).then((val) {
                       Navigator.pop(context);
                     });

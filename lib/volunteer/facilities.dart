@@ -385,7 +385,9 @@ class _FacilitiesState extends State<Facilities> {
                   'vehicle_type': typeVehicle,
                   'name':widget.name,
                   'lattitude':widget.lattitude,
-                  'longitude':widget.longitude
+                  'longitude':widget.longitude,
+                  'no_liked': 0,
+                      'liked_users': [widget.uid]
                 }).then((val) {
                   Navigator.pop(context,[true]);
                 });

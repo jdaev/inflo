@@ -137,7 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget page3() {
     return Container(
         child: Center(
-      child: Text('You\'re all done, let\'s start learning!'),
+      child: Text('You\'re all done.'),
     ));
   }
 

@@ -72,7 +72,10 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: bodyWidget,resizeToAvoidBottomInset: true,);
+    return Scaffold(
+      body: bodyWidget,
+      resizeToAvoidBottomInset: true,
+    );
   }
 
   Widget loginBox() {
@@ -144,15 +147,6 @@ class _LogInState extends State<LogIn> {
                                       },
                                       darkMode: false,
                                       text: 'Google',
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: FacebookSignInButton(
-                                      onPressed: () {},
-                                      text: 'Facebook',
                                     ),
                                   ),
                                 ),

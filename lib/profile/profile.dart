@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 String selDistrict;
@@ -8,133 +9,92 @@ class ProfileScreen extends StatefulWidget {
   final Widget child;
   final String userId;
   final String userDocumentPath;
-  ProfileScreen(
-      {Key key,
-      this.child,
-      this.userId,
-      this.userDocumentPath})
+  ProfileScreen({Key key, this.child, this.userId, this.userDocumentPath})
       : super(key: key);
 
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  String userDocumentReference;
+
+  @override
+  void initState() {
+    super.initState();
+
+    setState(() {
+      userDocumentReference = widget.userDocumentPath;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    EdgeInsets devicePadding = MediaQuery.of(context).padding;
-
-    Future<bool> textDialog(
-        BuildContext context, String title, String category) {
-      return showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            String newVal;
-            return new AlertDialog(
-              title: Text(title),
-              content: TextField(
-                onChanged: (value) => {newVal = value},
-              ),
-              contentPadding: EdgeInsets.all(10.0),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('CANCEL'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                FlatButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    if (newVal != null) {
-                      Firestore.instance
-                          .collection('users')
-                          .document(widget.userDocumentPath)
-                          .updateData({category: newVal}).then((onValue) {
-                        setState(() {});
-                        Navigator.pop(context);
-                      });
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                )
-              ],
-            );
-          });
-    }
-
-    Future<bool> districtDialog(BuildContext context) {
-      return showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return new AlertDialog(
-              title: Text('Select your District'),
-              content: DistrictDialogContent(),
-              contentPadding: EdgeInsets.all(10.0),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('CANCEL'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                FlatButton(
-                  child: Text('OK'),
-                  onPressed: () {
-                    if (selDistrict != null) {
-                      Firestore.instance
-                          .collection('users')
-                          .document(widget.userDocumentPath)
-                          .updateData({'district': selDistrict}).then(
-                              (onValue) {
-                        setState(() {});
-                        Navigator.pop(context);
-                      });
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                )
-              ],
-            );
-          });
-    }
-
-    DateTime _selectedDate = DateTime.now();
-    Future<Null> _selectDate(BuildContext context) async {
-      final DateTime picked = await showDatePicker(
-          context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime(1984, 1),
-          lastDate: DateTime(2101));
-      if (picked != null && picked != _selectedDate)
-        setState(() {
-          _selectedDate = picked;
-          Firestore.instance
-              .collection('users')
-              .document(widget.userDocumentPath)
-              .updateData({'dob': _selectedDate});
-        });
-    }
+    TextStyle h2 = TextStyle(
+      color: Colors.black.withOpacity(Colors.black.opacity * 0.84),
+      fontSize: 18.0,
+      height: 1,
+      fontFamily: "Rubik",
+    );
+    TextStyle h1 = TextStyle(
+        color: Colors.black.withOpacity(Colors.black.opacity * 0.84),
+        fontSize: 28.0,
+        height: 1,
+        fontFamily: "Rubik",
+        fontWeight: FontWeight.w600);
+    TextStyle category = TextStyle(
+      color: Colors.black.withOpacity(Colors.black.opacity * 0.84),
+      fontSize: 12.0,
+      height: 1,
+      fontFamily: "Rubik",
+    );
 
     return FutureBuilder(
-      future: Firestore.instance.collection('users').document(widget.userDocumentPath).get(),
+      future: Firestore.instance
+          .collection('users')
+          .document(userDocumentReference)
+          .get(),
       builder: (BuildContext context, AsyncSnapshot user) {
         if (user.hasData) {
           print(user.data);
           Widget _profileHeader() {
             return SliverList(
               delegate: SliverChildListDelegate([
-                SizedBox(
-                  height: devicePadding.top,
-                ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    user.data['name'],
-                    style: TextStyle(fontSize: 18),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                                              child: Text(
+                          user.data['name'],
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EditProfile(
+                                      district: user.data['district'],
+                                      dob: user.data['dob'],
+                                      email: user.data['email'],
+                                      name: user.data['name'],
+                                      phone: user.data['phone'],
+                                      pin: user.data['pin'],
+                                      uid: widget.userId,
+                                      userDocRef: userDocumentReference,
+                                    )),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.exit_to_app),
+                        onPressed: () {
+                          FirebaseAuth.instance.signOut();
+                        },
+                      )
+                    ],
                   ),
                 ),
                 Divider()
@@ -155,50 +115,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.edit,
-                    color: Colors.black45,
-                  ),
-                  onPressed: () {
-                    switch (category) {
-                      case 'phone':
-                        textDialog(
-                            context, 'Enter your new Phone Number', category);
-                        break;
-                      case 'email':
-                        textDialog(context, 'Enter your new Email', category);
-                        break;
-                      case 'name':
-                        textDialog(context, 'Enter your new Name', category);
-                        break;
-                      case 'dob':
-                        _selectDate(context);
-                        break;
-                      case 'pin':
-                        textDialog(context, 'Enter your new Pincode', category);
-                        break;
-                      case 'district':
-                        districtDialog(context);
-                        break;
-
-                      default:
-                    }
-                  },
-                ),
               ],
             );
           }
 
           Widget _profileDetails() {
+            DateTime date = (user.data['dob']).toDate();
+            print(date);
             TextEditingController _phoneController =
                 new TextEditingController(text: user.data['phone']);
             TextEditingController _emailController =
                 new TextEditingController(text: user.data['email']);
             TextEditingController _nameController =
                 new TextEditingController(text: user.data['name']);
-            TextEditingController _dobController =
-                new TextEditingController(text: user.data['dob'].toString());
+            TextEditingController _dobController = new TextEditingController(
+                text: date.day.toString() +
+                    ' / ' +
+                    date.month.toString() +
+                    ' / ' +
+                    date.year.toString());
             TextEditingController _pinController =
                 new TextEditingController(text: user.data['pin']);
             TextEditingController _districtController =
@@ -245,20 +180,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         } else {
-          return Container();
+          return Scaffold(
+            appBar: new AppBar(
+              title: Text('Profile'),
+            ),
+            body: LinearProgressIndicator(),
+          );
         }
       },
     );
   }
 }
 
-class DistrictDialogContent extends StatefulWidget {
+class EditProfile extends StatefulWidget {
+  final String name;
+  final DateTime dob;
+  final String pin;
+  final String district;
+  final String phone;
+  final String email;
+  final String userDocRef;
+  final String uid;
+
+  const EditProfile(
+      {Key key,
+      this.name,
+      this.dob,
+      this.pin,
+      this.district,
+      this.phone,
+      this.email,
+      this.userDocRef,
+      this.uid})
+      : super(key: key);
+
   @override
-  _DistrictDialogContentState createState() => _DistrictDialogContentState();
+  _EditProfileState createState() => _EditProfileState();
 }
 
-class _DistrictDialogContentState extends State<DistrictDialogContent> {
-  final List<String> _keralaDistricts = <String>[
+class _EditProfileState extends State<EditProfile> {
+  static const List<String> _keralaDistricts = <String>[
     'Alappuzha',
     'Ernakulam',
     'Idukki',
@@ -276,6 +237,47 @@ class _DistrictDialogContentState extends State<DistrictDialogContent> {
   ];
   List<DropdownMenuItem<String>> _dropDownMenuItems;
   String _selectedDistrict;
+  String userDocumentReference;
+  String uid;
+  DateTime dob;
+  TextEditingController _nameController;
+  TextEditingController _phoneController;
+  TextEditingController _pinController;
+  TextEditingController _emailController;
+  TextEditingController _dateController;
+
+  DateTime _selectedDate = DateTime.now();
+  Future<Null> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate,
+        firstDate: DateTime(1984, 1),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != _selectedDate)
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = _selectedDate.day.toString() +
+            ' / ' +
+            _selectedDate.month.toString() +
+            ' / ' +
+            _selectedDate.year.toString();
+      });
+  }
+
+  @override
+  void initState() {
+    _dropDownMenuItems = buildAndGetDropDownMenuItems(_keralaDistricts);
+    _selectedDistrict = widget.district != null ? widget.district : null;
+    _nameController = new TextEditingController(text: widget.name);
+    _pinController = new TextEditingController(text: widget.pin);
+    _phoneController = new TextEditingController(text: widget.phone);
+    _emailController = new TextEditingController(text: widget.email);
+    _dateController =
+        new TextEditingController(text: widget.dob.toIso8601String());
+
+    super.initState();
+  }
+
   List<DropdownMenuItem<String>> buildAndGetDropDownMenuItems(List districts) {
     List<DropdownMenuItem<String>> items = new List();
     for (String district in districts) {
@@ -286,25 +288,132 @@ class _DistrictDialogContentState extends State<DistrictDialogContent> {
   }
 
   void changedDropDownItem(String selectedDistrict) {
-    _selectedDistrict = selectedDistrict;
-    selDistrict = _selectedDistrict;
-  }
-
-  @override
-  void initState() {
-    _dropDownMenuItems = buildAndGetDropDownMenuItems(_keralaDistricts);
-    super.initState();
+    setState(() {
+      _selectedDistrict = selectedDistrict;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: DropdownButton(
-        hint: Text('District'),
-        isExpanded: true,
-        value: _selectedDistrict,
-        items: _dropDownMenuItems,
-        onChanged: changedDropDownItem,
+    return Scaffold(
+      appBar: AppBar(
+        brightness: Brightness.light,
+        backgroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.black),
+        elevation: 0.0,
+        title: Text(
+          'Edit Profile',
+          style: TextStyle(color: Colors.black),
+        ),
+      ),
+      body: Container(
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 36, 36, 4),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'What\'s your name?',
+                        ),
+                        controller: _nameController,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 4, 36, 4),
+                      child: GestureDetector(
+                          onTap: () => _selectDate(context),
+                          child: AbsorbPointer(
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: 'Date of Birth',
+                              ),
+                              controller: _dateController,
+                            ),
+                          )),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 4, 36, 4),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton(
+                          hint: Text('District'),
+                          isExpanded: true,
+                          value: _selectedDistrict,
+                          items: _dropDownMenuItems,
+                          onChanged: changedDropDownItem,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 4, 36, 4),
+                      child: Container(
+                        height: 1,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 4, 36, 4),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'PIN Code',
+                        ),
+                        controller: _pinController,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 4, 36, 4),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Phone Number',
+                        ),
+                        controller: _phoneController,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(36, 4, 36, 4),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'E-Mail',
+                        ),
+                        controller: _emailController,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                FlatButton(
+                  child: Text('SUBMIT'),
+                  onPressed: () {
+                    Firestore.instance
+                        .collection('users')
+                        .document(widget.userDocRef)
+                        .updateData({
+                      'name': _nameController.text,
+                      'uid': widget.uid,
+                      'phone': _phoneController.text,
+                      'pin': _pinController.text,
+                      'district': _selectedDistrict,
+                      'email': _emailController.text,
+                      'dob': _selectedDate,
+                    }).then((onValue) {
+                      Navigator.pop(context);
+                    }).catchError((onError) {
+                      print(onError);
+                    });
+                  },
+                )
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

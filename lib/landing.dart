@@ -49,7 +49,6 @@ class _LandingPageState extends State<LandingPage> {
     Icons.home,
     Icons.phone,
     Icons.location_on,
-    Icons.info,
     Icons.person
   ];
   int _currentPage = 0;
@@ -124,7 +123,6 @@ class _LandingPageState extends State<LandingPage> {
       _homePage(),
       _callsPage(),
       _mapPage(),
-      _infoPage(),
       _profilePage(),
     ];
 
@@ -132,7 +130,6 @@ class _LandingPageState extends State<LandingPage> {
       'InFlo',
       'Important Numbers',
       'Map',
-      'Citizens Floodkit',
       'Profile'
     ];
 

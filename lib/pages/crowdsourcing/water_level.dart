@@ -195,7 +195,7 @@ class _WaterLevelState extends State<WaterLevel> {
                         'name': widget.userData['name'],
                         'phone': widget.userData['phone'],
                         'no_liked': 0,
-                        'liked_users': []
+                        'liked_users': [widget.uid]
                       }).then((onValue) {
                         Navigator.pop(context);
                       });
@@ -209,7 +209,7 @@ class _WaterLevelState extends State<WaterLevel> {
                       'name': widget.userData['name'],
                       'phone': widget.userData['phone'],
                       'no_liked': 0,
-                      'liked_users': []
+                      'liked_users': [widget.uid]
                     }).then((onValue) {
                       Navigator.pop(context);
                     });

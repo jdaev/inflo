@@ -43,9 +43,9 @@ class CrowdsourcingDash extends StatelessWidget {
           child: Column(
             children: <Widget>[
               CardButton(
-                title: 'Participation',
+                title: 'Preparedness',
                 description:
-                    'Register to actively contribute in case of emergency reporting on events, hazards and dangers.',
+                    'Essential information for every user.',
                 assetImage: 'assets/svg/participation.svg',
                 route: '/participation',
                 userDocRef: userDocRef,

@@ -89,7 +89,7 @@ class _EMessageState extends State<EMessage> {
                       recipients.add(contact['phone'].toString());
                     }
                     FlutterSms.sendSMS(
-                            message: _messageController.text,
+                            message: _messageController.text + widget.currentLocation.latitude.toString() + widget.currentLocation.longitude.toString(),
                             recipients: recipients)
                         .then((onValue) {
                       flushbar.dismiss();

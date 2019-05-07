@@ -169,8 +169,8 @@ class _ExposedElementsState extends State<ExposedElements> {
                       'longitude': location[1],
                       'name': widget.userData['name'],
                       'phone': widget.userData['phone'],
-                      'no_liked':0,
-                      'liked_users':[]
+                      'no_liked':1,
+                      'liked_users':[widget.uid]
                     }).then((onValue) {
                       Navigator.pop(context);
                     });
